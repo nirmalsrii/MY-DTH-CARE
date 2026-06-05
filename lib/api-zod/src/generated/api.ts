@@ -48,6 +48,41 @@ export const GetAuthMeResponse = zod.object({
 
 
 /**
+ * @summary Check if first-time setup is required
+ */
+export const GetSetupStatusResponse = zod.object({
+  "setupRequired": zod.boolean()
+})
+
+
+/**
+ * @summary First-time admin setup (only works when no admin exists)
+ */
+export const SetupAdminBody = zod.object({
+  "username": zod.string(),
+  "password": zod.string()
+})
+
+export const SetupAdminResponse = zod.object({
+  "authenticated": zod.boolean(),
+  "username": zod.string().nullable()
+})
+
+
+/**
+ * @summary Change admin password (requires auth)
+ */
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ChangePasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary List all DTH providers
  */
 export const ListProvidersResponseItem = zod.object({
@@ -130,6 +165,7 @@ export const GetCustomerResponse = zod.object({
   "nextRechargeDate": zod.string(),
   "amountInr": zod.number(),
   "amountLkr": zod.number(),
+  "customerAmountLkr": zod.number().nullish(),
   "planName": zod.string().nullish(),
   "profitMargin": zod.number().nullish(),
   "notes": zod.string().nullish(),
@@ -194,6 +230,7 @@ export const ListRechargesResponseItem = zod.object({
   "nextRechargeDate": zod.string(),
   "amountInr": zod.number(),
   "amountLkr": zod.number(),
+  "customerAmountLkr": zod.number().nullish(),
   "planName": zod.string().nullish(),
   "profitMargin": zod.number().nullish(),
   "notes": zod.string().nullish(),
@@ -214,10 +251,10 @@ export const addRechargeBodySendSmsDefault = false;
 export const AddRechargeBody = zod.object({
   "rechargeDate": zod.string().describe('YYYY-MM-DD format'),
   "validityDays": zod.number().describe('Number of days the recharge is valid'),
-  "amountInr": zod.number().describe('Amount in Indian Rupees'),
-  "amountLkr": zod.number().describe('Equivalent amount in Sri Lankan Rupees'),
+  "amountInr": zod.number().describe('Cost in Indian Rupees (wholesale)'),
+  "amountLkr": zod.number().describe('Cost in Sri Lankan Rupees (wholesale)'),
+  "customerAmountLkr": zod.number().optional().describe('Amount charged to customer in LKR'),
   "planName": zod.string().optional(),
-  "profitMargin": zod.number().optional(),
   "notes": zod.string().optional(),
   "sendSms": zod.boolean().default(addRechargeBodySendSmsDefault)
 })
@@ -244,6 +281,8 @@ export const GetDashboardStatsResponse = zod.object({
   "monthlyRevenueLkr": zod.number(),
   "totalRevenueInr": zod.number(),
   "totalRevenueLkr": zod.number(),
+  "totalProfitLkr": zod.number(),
+  "monthlyProfitLkr": zod.number(),
   "customersByProvider": zod.array(zod.object({
   "provider": zod.string(),
   "count": zod.number(),

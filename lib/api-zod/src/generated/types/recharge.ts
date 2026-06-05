@@ -15,6 +15,8 @@ export interface Recharge {
   amountInr: number;
   amountLkr: number;
   /** @nullable */
+  customerAmountLkr?: number | null;
+  /** @nullable */
   planName?: string | null;
   /** @nullable */
   profitMargin?: number | null;

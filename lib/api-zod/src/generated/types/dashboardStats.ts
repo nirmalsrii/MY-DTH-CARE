@@ -17,5 +17,7 @@ export interface DashboardStats {
   monthlyRevenueLkr: number;
   totalRevenueInr: number;
   totalRevenueLkr: number;
+  totalProfitLkr: number;
+  monthlyProfitLkr: number;
   customersByProvider: ProviderCount[];
 }

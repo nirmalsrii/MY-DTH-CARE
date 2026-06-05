@@ -29,6 +29,23 @@ function computeStatus(nextRechargeDate: string | null): string {
   return "active";
 }
 
+function formatRecharge(r: typeof rechargesTable.$inferSelect) {
+  return {
+    id: r.id,
+    customerId: r.customerId,
+    rechargeDate: r.rechargeDate,
+    validityDays: r.validityDays,
+    nextRechargeDate: r.nextRechargeDate,
+    amountInr: parseFloat(r.amountInr),
+    amountLkr: parseFloat(r.amountLkr),
+    customerAmountLkr: r.customerAmountLkr ? parseFloat(r.customerAmountLkr) : null,
+    planName: r.planName ?? null,
+    profitMargin: r.profitMargin ? parseFloat(r.profitMargin) : null,
+    notes: r.notes ?? null,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
 router.get("/customers/:customerId/recharges", requireAuth, async (req, res): Promise<void> => {
   const params = ListRechargesParams.safeParse(req.params);
   if (!params.success) {
@@ -40,19 +57,7 @@ router.get("/customers/:customerId/recharges", requireAuth, async (req, res): Pr
     .where(eq(rechargesTable.customerId, params.data.customerId))
     .orderBy(rechargesTable.rechargeDate);
 
-  res.json(recharges.map(r => ({
-    id: r.id,
-    customerId: r.customerId,
-    rechargeDate: r.rechargeDate,
-    validityDays: r.validityDays,
-    nextRechargeDate: r.nextRechargeDate,
-    amountInr: parseFloat(r.amountInr),
-    amountLkr: parseFloat(r.amountLkr),
-    planName: r.planName ?? null,
-    profitMargin: r.profitMargin ? parseFloat(r.profitMargin) : null,
-    notes: r.notes ?? null,
-    createdAt: r.createdAt.toISOString(),
-  })));
+  res.json(recharges.map(formatRecharge));
 });
 
 router.post("/customers/:customerId/recharges", requireAuth, async (req, res): Promise<void> => {
@@ -76,6 +81,11 @@ router.post("/customers/:customerId/recharges", requireAuth, async (req, res): P
 
   const nextRechargeDate = addDays(parsed.data.rechargeDate, parsed.data.validityDays);
 
+  const customerAmountLkr = parsed.data.customerAmountLkr ?? null;
+  const profitMargin = customerAmountLkr != null
+    ? customerAmountLkr - parsed.data.amountLkr
+    : null;
+
   const [recharge] = await db.insert(rechargesTable).values({
     customerId: params.data.customerId,
     rechargeDate: parsed.data.rechargeDate,
@@ -83,8 +93,9 @@ router.post("/customers/:customerId/recharges", requireAuth, async (req, res): P
     nextRechargeDate,
     amountInr: String(parsed.data.amountInr),
     amountLkr: String(parsed.data.amountLkr),
+    customerAmountLkr: customerAmountLkr != null ? String(customerAmountLkr) : null,
     planName: parsed.data.planName ?? null,
-    profitMargin: parsed.data.profitMargin != null ? String(parsed.data.profitMargin) : null,
+    profitMargin: profitMargin != null ? String(profitMargin) : null,
     notes: parsed.data.notes ?? null,
   }).returning();
 
@@ -95,19 +106,7 @@ router.post("/customers/:customerId/recharges", requireAuth, async (req, res): P
     status: newStatus,
   }).where(eq(customersTable.id, params.data.customerId));
 
-  res.status(201).json({
-    id: recharge.id,
-    customerId: recharge.customerId,
-    rechargeDate: recharge.rechargeDate,
-    validityDays: recharge.validityDays,
-    nextRechargeDate: recharge.nextRechargeDate,
-    amountInr: parseFloat(recharge.amountInr),
-    amountLkr: parseFloat(recharge.amountLkr),
-    planName: recharge.planName ?? null,
-    profitMargin: recharge.profitMargin ? parseFloat(recharge.profitMargin) : null,
-    notes: recharge.notes ?? null,
-    createdAt: recharge.createdAt.toISOString(),
-  });
+  res.status(201).json(formatRecharge(recharge));
 });
 
 router.delete("/recharges/:id", requireAuth, async (req, res): Promise<void> => {

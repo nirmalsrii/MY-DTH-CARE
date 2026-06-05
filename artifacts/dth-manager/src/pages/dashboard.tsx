@@ -1,14 +1,13 @@
 import { useGetDashboardStats, useGetDueAlerts, getGetDashboardStatsQueryKey, getGetDueAlertsQueryKey, useRefreshAllStatuses } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Users, Wifi, AlertTriangle, XCircle, Clock, TrendingUp, RefreshCw } from "lucide-react";
+import { Users, Wifi, AlertTriangle, XCircle, TrendingUp, RefreshCw, Banknote } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { ProviderBadge } from "@/components/ui/provider-badge";
 import { CurrencyDisplay } from "@/components/ui/currency-display";
-import { useExchangeRate } from "@/hooks/use-exchange-rate";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,14 +46,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Overview of all DTH subscriptions</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={refresh.isPending}
-          className="gap-2"
-          data-testid="button-refresh-status"
-        >
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refresh.isPending} className="gap-2" data-testid="button-refresh-status">
           <RefreshCw className={`w-4 h-4 ${refresh.isPending ? "animate-spin" : ""}`} />
           Refresh Status
         </Button>
@@ -62,48 +54,20 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Customers"
-          value={stats?.totalCustomers}
-          icon={Users}
-          iconColor="text-primary"
-          iconBg="bg-primary/10"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Active"
-          value={stats?.activeCustomers}
-          icon={Wifi}
-          iconColor="text-green-600"
-          iconBg="bg-green-50"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Expiring Soon"
-          value={stats?.expiringSoonCustomers}
-          icon={AlertTriangle}
-          iconColor="text-amber-600"
-          iconBg="bg-amber-50"
-          isLoading={isLoading}
-        />
-        <StatCard
-          label="Expired"
-          value={stats?.expiredCustomers}
-          icon={XCircle}
-          iconColor="text-red-600"
-          iconBg="bg-red-50"
-          isLoading={isLoading}
-        />
+        <StatCard label="Total Customers" value={stats?.totalCustomers} icon={Users} iconColor="text-primary" iconBg="bg-primary/10" isLoading={isLoading} />
+        <StatCard label="Active" value={stats?.activeCustomers} icon={Wifi} iconColor="text-green-600" iconBg="bg-green-50" isLoading={isLoading} />
+        <StatCard label="Expiring Soon" value={stats?.expiringSoonCustomers} icon={AlertTriangle} iconColor="text-amber-600" iconBg="bg-amber-50" isLoading={isLoading} />
+        <StatCard label="Expired" value={stats?.expiredCustomers} icon={XCircle} iconColor="text-red-600" iconBg="bg-red-50" isLoading={isLoading} />
       </div>
 
       {/* Revenue + Chart Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue Cards */}
-        <div className="space-y-4">
+        {/* Revenue & Profit Cards */}
+        <div className="space-y-3">
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" /> This Month
+                <TrendingUp className="w-4 h-4" /> This Month Revenue
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -112,37 +76,60 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-          <Card className="shadow-sm">
+
+          <Card className="shadow-sm border-green-200 bg-green-50/50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" /> Total Revenue
+              <CardTitle className="text-sm font-medium text-green-700 flex items-center gap-2">
+                <Banknote className="w-4 h-4" /> This Month Profit
               </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? <Skeleton className="h-8 w-24" /> : (
-                <CurrencyDisplay amountInr={stats?.totalRevenueInr ?? 0} />
+                <div>
+                  <p className="text-2xl font-bold text-green-700">Rs. {(stats?.monthlyProfitLkr ?? 0).toFixed(0)}</p>
+                  <p className="text-xs text-green-600 mt-0.5">LKR profit this month</p>
+                </div>
               )}
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-amber-200 bg-amber-50">
+
+          <Card className="shadow-sm border-green-300 bg-green-50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-700 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" /> Due Alerts
+              <CardTitle className="text-sm font-medium text-green-800 flex items-center gap-2">
+                <Banknote className="w-4 h-4" /> Total Profit (All Time)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : (
                 <div>
-                  <p className="text-2xl font-bold text-red-600">{urgentCount}</p>
-                  <p className="text-xs text-muted-foreground">Overdue/Today</p>
+                  <p className="text-2xl font-bold text-green-800">Rs. {(stats?.totalProfitLkr ?? 0).toFixed(0)}</p>
+                  <p className="text-xs text-green-700 mt-0.5">Total LKR profit earned</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-amber-600">{expiringCount}</p>
-                  <p className="text-xs text-muted-foreground">In 7 days</p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
+
+          {urgentCount > 0 && (
+            <Card className="shadow-sm border-amber-200 bg-amber-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-amber-700 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" /> Due Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-2xl font-bold text-red-600">{urgentCount}</p>
+                    <p className="text-xs text-muted-foreground">Overdue/Today</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-600">{expiringCount}</p>
+                    <p className="text-xs text-muted-foreground">In 7 days</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Pie Chart */}
@@ -154,9 +141,18 @@ export default function Dashboard() {
             {isLoading ? (
               <Skeleton className="h-48 w-full" />
             ) : pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={75}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
+                  >
                     {pieData.map((_, i) => (
                       <Cell key={i} fill={PROVIDER_COLORS[i % PROVIDER_COLORS.length]} />
                     ))}
@@ -181,7 +177,7 @@ export default function Dashboard() {
                 Urgent Attention Required
               </CardTitle>
               <Link href="/alerts">
-                <a className="text-xs text-primary hover:underline font-medium" data-testid="link-view-all-alerts">View all</a>
+                <a className="text-xs text-primary hover:underline font-medium">View all</a>
               </Link>
             </div>
           </CardHeader>

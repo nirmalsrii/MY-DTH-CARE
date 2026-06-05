@@ -28,6 +28,7 @@ export const rechargesTable = pgTable("recharges", {
   nextRechargeDate: text("next_recharge_date").notNull(),
   amountInr: text("amount_inr").notNull(),
   amountLkr: text("amount_lkr").notNull(),
+  customerAmountLkr: text("customer_amount_lkr"),
   planName: text("plan_name"),
   profitMargin: text("profit_margin"),
   notes: text("notes"),

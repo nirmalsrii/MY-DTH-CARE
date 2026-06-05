@@ -7,6 +7,7 @@
  */
 
 export * from './authStatus';
+export * from './changePasswordInput';
 export * from './customer';
 export * from './customerDetail';
 export * from './customerDetailStatus';
@@ -25,5 +26,7 @@ export * from './provider';
 export * from './providerCount';
 export * from './recharge';
 export * from './rechargeInput';
+export * from './setupInput';
+export * from './setupStatus';
 export * from './smsInput';
 export * from './successResponse';

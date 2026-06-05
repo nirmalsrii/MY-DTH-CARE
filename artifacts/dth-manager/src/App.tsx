@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { getAuthMe } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import Login from "@/pages/login";
+import Setup from "@/pages/setup";
 import Dashboard from "@/pages/dashboard";
 import Customers from "@/pages/customers";
 import NewCustomer from "@/pages/new-customer";
@@ -30,6 +31,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     retry: false,
   });
 
+  const publicRoutes = ["/login", "/setup"];
+  const isPublicRoute = publicRoutes.includes(location);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-sidebar flex items-center justify-center">
@@ -38,15 +42,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!data?.authenticated && location !== "/login") {
+  if (!data?.authenticated && !isPublicRoute) {
     return <Redirect to="/login" />;
   }
 
-  if (data?.authenticated && location === "/login") {
+  if (data?.authenticated && isPublicRoute) {
     return <Redirect to="/" />;
   }
 
-  if (location === "/login") {
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 
@@ -58,6 +62,7 @@ function Router() {
     <AuthGuard>
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/setup" component={Setup} />
         <Route path="/" component={Dashboard} />
         <Route path="/customers" component={Customers} />
         <Route path="/customers/new" component={NewCustomer} />

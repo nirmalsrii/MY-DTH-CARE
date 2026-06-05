@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
-import { Settings2, DollarSign, Info, Shield } from "lucide-react";
+import { useChangePassword } from "@workspace/api-client-react";
+import { Settings2, DollarSign, Info, Shield, Key, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,12 @@ export default function Settings() {
   const { toast } = useToast();
   const [rateInput, setRateInput] = useState(String(rate));
 
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const changePassword = useChangePassword();
+
   const handleSaveRate = () => {
     const val = parseFloat(rateInput);
     if (isNaN(val) || val <= 0) {
@@ -32,6 +39,36 @@ export default function Settings() {
     }
     setRate(val);
     toast({ title: "Exchange rate updated", description: `1 INR = ${val} LKR` });
+  };
+
+  const handleChangePassword = () => {
+    if (!currentPw) {
+      toast({ title: "Enter your current password", variant: "destructive" });
+      return;
+    }
+    if (newPw.length < 6) {
+      toast({ title: "New password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    if (newPw !== confirmPw) {
+      toast({ title: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+    changePassword.mutate(
+      { data: { currentPassword: currentPw, newPassword: newPw } },
+      {
+        onSuccess: () => {
+          toast({ title: "Password changed successfully" });
+          setCurrentPw("");
+          setNewPw("");
+          setConfirmPw("");
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.error ?? "Failed to change password";
+          toast({ title: msg, variant: "destructive" });
+        },
+      }
+    );
   };
 
   return (
@@ -54,7 +91,7 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Set the INR to LKR conversion rate used across all currency displays and recharge calculations.
+            Set the INR to LKR conversion rate used for cost calculations and profit display.
           </p>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -69,9 +106,7 @@ export default function Settings() {
               />
               <span className="text-sm font-medium">LKR</span>
             </div>
-            <Button onClick={handleSaveRate} size="sm" data-testid="button-save-rate">
-              Save
-            </Button>
+            <Button onClick={handleSaveRate} size="sm" data-testid="button-save-rate">Save</Button>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-sm">
             <p className="font-medium text-muted-foreground">Current rate: 1 INR = {rate} LKR</p>
@@ -80,21 +115,64 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Admin */}
+      {/* Change Password */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="w-4 h-4 text-primary" />
-            Admin Credentials
+            <Key className="w-4 h-4 text-primary" />
+            Change Password
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Admin credentials are configured via environment variables on the server.
-          </p>
-          <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-1 font-mono">
-            <p><span className="text-muted-foreground">ADMIN_USERNAME</span> — Username (default: <strong>admin</strong>)</p>
-            <p><span className="text-muted-foreground">ADMIN_PASSWORD</span> — Password (default: <strong>dth@admin2024</strong>)</p>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">Update your admin login password.</p>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Current Password</Label>
+              <div className="relative">
+                <Input
+                  type={showPw ? "text" : "password"}
+                  value={currentPw}
+                  onChange={e => setCurrentPw(e.target.value)}
+                  placeholder="Enter current password"
+                  data-testid="input-current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>New Password</Label>
+              <Input
+                type={showPw ? "text" : "password"}
+                value={newPw}
+                onChange={e => setNewPw(e.target.value)}
+                placeholder="Min. 6 characters"
+                data-testid="input-new-password"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm New Password</Label>
+              <Input
+                type={showPw ? "text" : "password"}
+                value={confirmPw}
+                onChange={e => setConfirmPw(e.target.value)}
+                placeholder="Repeat new password"
+                data-testid="input-confirm-password"
+              />
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              disabled={changePassword.isPending}
+              className="w-full"
+              data-testid="button-change-password"
+            >
+              {changePassword.isPending ? "Changing..." : "Change Password"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -109,16 +187,14 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            SMS notifications are sent after recharges when the "Send SMS" toggle is enabled. Configure your SMS gateway via environment variables.
+            SMS notifications are sent after recharges when the "Send SMS" toggle is enabled. Configure via environment variables on the server.
           </p>
           <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-1 font-mono">
             <p><span className="text-muted-foreground">SMS_GATEWAY_URL</span> — Your SMS provider API endpoint</p>
             <p><span className="text-muted-foreground">SMS_API_KEY</span> — API authentication key</p>
             <p><span className="text-muted-foreground">SMS_SENDER_ID</span> — Sender ID (default: DTHSVC)</p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            When no gateway is configured, SMS messages are logged to the server console (simulated mode).
-          </p>
+          <p className="text-xs text-muted-foreground">When no gateway is configured, SMS messages are logged to the server console (simulated mode).</p>
         </CardContent>
       </Card>
 

@@ -1,4 +1,5 @@
-import { useAdminLogin, getGetAuthMeQueryKey } from "@workspace/api-client-react";
+import { useEffect } from "react";
+import { useAdminLogin, getGetAuthMeQueryKey, useGetSetupStatus } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -21,6 +23,14 @@ export default function Login() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const login = useAdminLogin();
+
+  const { data: setupStatus, isLoading: checkingSetup } = useGetSetupStatus();
+
+  useEffect(() => {
+    if (setupStatus?.setupRequired) {
+      setLocation("/setup");
+    }
+  }, [setupStatus]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -38,6 +48,14 @@ export default function Login() {
       },
     });
   };
+
+  if (checkingSetup) {
+    return (
+      <div className="min-h-screen bg-sidebar flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-sidebar-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
@@ -72,6 +90,7 @@ export default function Login() {
                           placeholder="admin"
                           className="pl-9 bg-sidebar border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/30 focus:border-sidebar-primary"
                           data-testid="input-username"
+                          autoComplete="username"
                         />
                       </div>
                     </FormControl>
@@ -94,6 +113,7 @@ export default function Login() {
                           placeholder="••••••••"
                           className="pl-9 bg-sidebar border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/30 focus:border-sidebar-primary"
                           data-testid="input-password"
+                          autoComplete="current-password"
                         />
                       </div>
                     </FormControl>
@@ -111,12 +131,6 @@ export default function Login() {
               </Button>
             </form>
           </Form>
-
-          <div className="mt-6 pt-4 border-t border-sidebar-border">
-            <p className="text-xs text-sidebar-foreground/30 text-center">
-              Default: admin / dth@admin2024
-            </p>
-          </div>
         </div>
       </div>
     </div>

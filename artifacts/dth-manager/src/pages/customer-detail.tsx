@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Phone, MapPin, CreditCard, Plus, MessageSquare, Trash2, Edit2 } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, CreditCard, Plus, MessageSquare, Edit2, TrendingUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,8 +34,8 @@ const rechargeSchema = z.object({
   rechargeDate: z.string().min(1, "Date is required"),
   validityDays: z.coerce.number().int().min(1, "Validity must be at least 1 day"),
   amountInr: z.coerce.number().min(0, "Amount required"),
+  customerAmountLkr: z.coerce.number().optional(),
   planName: z.string().optional(),
-  profitMargin: z.coerce.number().optional(),
   notes: z.string().optional(),
   sendSms: z.boolean().default(false),
 });
@@ -65,15 +65,34 @@ export default function CustomerDetail() {
       rechargeDate: today,
       validityDays: 30,
       amountInr: 0,
+      customerAmountLkr: undefined,
       planName: "",
-      profitMargin: undefined,
       notes: "",
       sendSms: false,
     },
   });
 
-  const watchedAmountInr = form.watch("amountInr");
-  const computedLkr = (watchedAmountInr || 0) * rate;
+  const watchedAmountInr = form.watch("amountInr") || 0;
+  const watchedCustomerAmountLkr = form.watch("customerAmountLkr");
+  const watchedRechargeDate = form.watch("rechargeDate");
+  const watchedValidityDays = form.watch("validityDays") || 30;
+  const watchedSendSms = form.watch("sendSms");
+
+  const costLkr = watchedAmountInr * rate;
+  const profitLkr = watchedCustomerAmountLkr != null && watchedCustomerAmountLkr > 0
+    ? watchedCustomerAmountLkr - costLkr
+    : null;
+
+  // Calculate next recharge date for SMS preview
+  const nextRechargeDatePreview = (() => {
+    try {
+      const d = new Date(watchedRechargeDate);
+      d.setDate(d.getDate() + watchedValidityDays);
+      return d.toDateString();
+    } catch { return ""; }
+  })();
+
+  const smsPreview = customer ? `Dear ${customer.name}, your ${customer.provider.replace(/_/g, " ")} DTH has been recharged for ${watchedValidityDays} days. Amount: Rs.${(watchedCustomerAmountLkr ?? costLkr).toFixed(0)} (INR ${watchedAmountInr}). Next due: ${nextRechargeDatePreview}. - DTH Manager` : "";
 
   const onSubmitRecharge = (data: RechargeForm) => {
     const amountLkr = data.amountInr * rate;
@@ -85,8 +104,8 @@ export default function CustomerDetail() {
           validityDays: data.validityDays,
           amountInr: data.amountInr,
           amountLkr,
+          customerAmountLkr: data.customerAmountLkr || undefined,
           planName: data.planName || undefined,
-          profitMargin: data.profitMargin || undefined,
           notes: data.notes || undefined,
           sendSms: data.sendSms,
         },
@@ -98,15 +117,12 @@ export default function CustomerDetail() {
           queryClient.invalidateQueries({ queryKey: getListCustomersQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDashboardStatsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDueAlertsQueryKey() });
-          form.reset({ rechargeDate: today, validityDays: 30, amountInr: 0, planName: "", sendSms: false });
+          form.reset({ rechargeDate: today, validityDays: 30, amountInr: 0, customerAmountLkr: undefined, planName: "", sendSms: false });
           toast({ title: "Recharge added successfully" });
 
           if (data.sendSms && customer) {
-            const nextDate = new Date(data.rechargeDate);
-            nextDate.setDate(nextDate.getDate() + data.validityDays);
-            const msg = `Dear ${customer.name}, your ${customer.provider.replace(/_/g, " ")} DTH has been recharged for ${data.validityDays} days. Amount: Rs.${amountLkr.toFixed(0)} (INR ${data.amountInr}). Next due: ${nextDate.toDateString()}. - DTH Manager`;
             sendSms.mutate(
-              { data: { customerId: id, message: msg, mobile: customer.mobile } },
+              { data: { customerId: id, message: smsPreview, mobile: customer.mobile } },
               { onError: () => toast({ title: "SMS send failed", variant: "destructive" }) }
             );
           }
@@ -142,11 +158,9 @@ export default function CustomerDetail() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <Link href="/customers">
-            <a className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Customers
-            </a>
+          <Link href="/customers" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Customers
           </Link>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{customer.name}</h1>
@@ -154,22 +168,15 @@ export default function CustomerDetail() {
             <ProviderBadge provider={customer.provider} />
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={() => setShowEditDialog(true)}
-          data-testid="button-edit"
-        >
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowEditDialog(true)} data-testid="button-edit">
           <Edit2 className="w-3.5 h-3.5" />
           Edit
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left Column — Info + Recharge History */}
+        {/* Left Column */}
         <div className="lg:col-span-3 space-y-5">
-          {/* Info Card */}
           <Card className="shadow-sm">
             <CardContent className="pt-5">
               <div className="grid grid-cols-2 gap-4">
@@ -216,10 +223,21 @@ export default function CustomerDetail() {
                         {r.planName && <p className="text-xs text-muted-foreground">{r.planName}</p>}
                         {r.notes && <p className="text-xs text-muted-foreground italic">{r.notes}</p>}
                       </div>
-                      <div className="text-right">
-                        <CurrencyDisplay amountInr={r.amountInr} amountLkr={r.amountLkr} />
+                      <div className="text-right space-y-0.5">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Cost</p>
+                          <CurrencyDisplay amountInr={r.amountInr} amountLkr={r.amountLkr} />
+                        </div>
+                        {r.customerAmountLkr != null && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Customer paid</p>
+                            <p className="text-sm font-medium">Rs. {r.customerAmountLkr.toFixed(2)}</p>
+                          </div>
+                        )}
                         {r.profitMargin != null && (
-                          <p className="text-xs text-green-600 mt-0.5">Profit: ₹{r.profitMargin}</p>
+                          <p className={`text-xs font-semibold ${r.profitMargin >= 0 ? "text-green-600" : "text-red-600"}`}>
+                            Profit: Rs. {r.profitMargin.toFixed(2)}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -241,113 +259,111 @@ export default function CustomerDetail() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmitRecharge)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="rechargeDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recharge Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-recharge-date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="validityDays"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Validity (days)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} placeholder="30" data-testid="input-validity" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amountInr"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount (INR)</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" {...field} placeholder="399" data-testid="input-amount-inr" />
-                        </FormControl>
-                        <FormMessage />
-                        {watchedAmountInr > 0 && (
-                          <p className="text-xs text-muted-foreground">≈ Rs. {computedLkr.toFixed(2)} LKR</p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="planName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Plan Name <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. HD Dhamaka" data-testid="input-plan-name" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="profitMargin"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Profit Margin ₹ <span className="text-muted-foreground font-normal">(admin only)</span></FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" {...field} placeholder="50" data-testid="input-profit" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
-                        <FormControl>
-                          <Textarea {...field} rows={2} placeholder="Any notes..." data-testid="input-notes" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                <form onSubmit={form.handleSubmit(onSubmitRecharge)} className="space-y-3">
+                  <FormField control={form.control} name="rechargeDate" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recharge Date</FormLabel>
+                      <FormControl><Input type="date" {...field} data-testid="input-recharge-date" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="validityDays" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Validity (days)</FormLabel>
+                      <FormControl><Input type="number" {...field} placeholder="30" data-testid="input-validity" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {/* Amount INR + cost LKR */}
+                  <FormField control={form.control} name="amountInr" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cost Amount (INR)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} placeholder="399" data-testid="input-amount-inr" />
+                      </FormControl>
+                      <FormMessage />
+                      {watchedAmountInr > 0 && (
+                        <div className="text-xs bg-muted/60 rounded px-2 py-1.5 mt-1">
+                          <span className="text-muted-foreground">Cost LKR: </span>
+                          <span className="font-semibold text-foreground">Rs. {costLkr.toFixed(2)}</span>
+                          <span className="text-muted-foreground ml-1">(@ {rate} per INR)</span>
+                        </div>
+                      )}
+                    </FormItem>
+                  )} />
+
+                  {/* Customer Amount LKR */}
+                  <FormField control={form.control} name="customerAmountLkr" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Amount (LKR)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="What customer pays in Rs."
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={e => field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                          data-testid="input-customer-amount"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      {profitLkr != null && (
+                        <div className={`text-xs rounded px-2 py-1.5 mt-1 font-semibold ${profitLkr >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                          <TrendingUp className="inline w-3 h-3 mr-1" />
+                          Profit: Rs. {profitLkr.toFixed(2)}
+                          {profitLkr < 0 && " (loss)"}
+                        </div>
+                      )}
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="planName" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plan Name <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                      <FormControl><Input {...field} placeholder="e.g. HD Dhamaka" data-testid="input-plan-name" /></FormControl>
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="notes" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                      <FormControl><Textarea {...field} rows={2} placeholder="Any notes..." data-testid="input-notes" /></FormControl>
+                    </FormItem>
+                  )} />
 
                   <Separator />
 
-                  <FormField
-                    control={form.control}
-                    name="sendSms"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <div>
-                          <FormLabel className="flex items-center gap-1.5">
-                            <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                            Send SMS notification
-                          </FormLabel>
-                          <p className="text-xs text-muted-foreground">Notify customer after recharge</p>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-send-sms" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <FormField control={form.control} name="sendSms" render={({ field }) => (
+                    <FormItem className="flex items-center justify-between">
+                      <div>
+                        <FormLabel className="flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                          Send SMS notification
+                        </FormLabel>
+                        <p className="text-xs text-muted-foreground">Notify customer after recharge</p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} data-testid="switch-send-sms" />
+                      </FormControl>
+                    </FormItem>
+                  )} />
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={addRecharge.isPending}
-                    data-testid="button-submit-recharge"
-                  >
+                  {/* SMS Preview */}
+                  {watchedSendSms && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-blue-700 flex items-center gap-1 mb-1.5">
+                        <Info className="w-3 h-3" />
+                        SMS Preview ({smsPreview.length} chars)
+                      </p>
+                      <p className="text-xs text-blue-800 leading-relaxed break-words">{smsPreview}</p>
+                      <p className="text-xs text-blue-500 mt-1.5">→ Will be sent to {customer?.mobile}</p>
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={addRecharge.isPending} data-testid="button-submit-recharge">
                     {addRecharge.isPending ? "Adding..." : "Add Recharge"}
                   </Button>
                 </form>

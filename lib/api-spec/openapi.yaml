@@ -92,6 +92,69 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /auth/setup-status:
+    get:
+      operationId: getSetupStatus
+      tags: [auth]
+      summary: Check if first-time setup is required
+      responses:
+        "200":
+          description: Setup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+
+  /auth/setup:
+    post:
+      operationId: setupAdmin
+      tags: [auth]
+      summary: First-time admin setup (only works when no admin exists)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupInput"
+      responses:
+        "200":
+          description: Admin created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+        "400":
+          description: Setup already done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/change-password:
+    put:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change admin password (requires auth)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Not authenticated or wrong current password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /providers:
     get:
       operationId: listProviders
@@ -414,6 +477,36 @@ components:
         - authenticated
         - username
 
+    SetupStatus:
+      type: object
+      properties:
+        setupRequired:
+          type: boolean
+      required:
+        - setupRequired
+
+    SetupInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    ChangePasswordInput:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+      required:
+        - currentPassword
+        - newPassword
+
     Provider:
       type: object
       properties:
@@ -569,6 +662,8 @@ components:
           type: number
         amountLkr:
           type: number
+        customerAmountLkr:
+          type: ["number", "null"]
         planName:
           type: ["string", "null"]
         profitMargin:
@@ -598,14 +693,15 @@ components:
           description: Number of days the recharge is valid
         amountInr:
           type: number
-          description: Amount in Indian Rupees
+          description: Cost in Indian Rupees (wholesale)
         amountLkr:
           type: number
-          description: Equivalent amount in Sri Lankan Rupees
+          description: Cost in Sri Lankan Rupees (wholesale)
+        customerAmountLkr:
+          type: number
+          description: Amount charged to customer in LKR
         planName:
           type: string
-        profitMargin:
-          type: number
         notes:
           type: string
         sendSms:
@@ -638,6 +734,10 @@ components:
           type: number
         totalRevenueLkr:
           type: number
+        totalProfitLkr:
+          type: number
+        monthlyProfitLkr:
+          type: number
         customersByProvider:
           type: array
           items:
@@ -652,6 +752,8 @@ components:
         - monthlyRevenueLkr
         - totalRevenueInr
         - totalRevenueLkr
+        - totalProfitLkr
+        - monthlyProfitLkr
         - customersByProvider
 
     ProviderCount:

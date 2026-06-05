@@ -28,6 +28,20 @@ export interface AuthStatus {
   username: string | null;
 }
 
+export interface SetupStatus {
+  setupRequired: boolean;
+}
+
+export interface SetupInput {
+  username: string;
+  password: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface Provider {
   id: string;
   name: string;
@@ -88,6 +102,8 @@ export interface Recharge {
   amountInr: number;
   amountLkr: number;
   /** @nullable */
+  customerAmountLkr?: number | null;
+  /** @nullable */
   planName?: string | null;
   /** @nullable */
   profitMargin?: number | null;
@@ -141,12 +157,13 @@ export interface RechargeInput {
   rechargeDate: string;
   /** Number of days the recharge is valid */
   validityDays: number;
-  /** Amount in Indian Rupees */
+  /** Cost in Indian Rupees (wholesale) */
   amountInr: number;
-  /** Equivalent amount in Sri Lankan Rupees */
+  /** Cost in Sri Lankan Rupees (wholesale) */
   amountLkr: number;
+  /** Amount charged to customer in LKR */
+  customerAmountLkr?: number;
   planName?: string;
-  profitMargin?: number;
   notes?: string;
   sendSms?: boolean;
 }
@@ -167,6 +184,8 @@ export interface DashboardStats {
   monthlyRevenueLkr: number;
   totalRevenueInr: number;
   totalRevenueLkr: number;
+  totalProfitLkr: number;
+  monthlyProfitLkr: number;
   customersByProvider: ProviderCount[];
 }
 

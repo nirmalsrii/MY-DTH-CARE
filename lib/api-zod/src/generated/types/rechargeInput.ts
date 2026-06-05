@@ -11,12 +11,13 @@ export interface RechargeInput {
   rechargeDate: string;
   /** Number of days the recharge is valid */
   validityDays: number;
-  /** Amount in Indian Rupees */
+  /** Cost in Indian Rupees (wholesale) */
   amountInr: number;
-  /** Equivalent amount in Sri Lankan Rupees */
+  /** Cost in Sri Lankan Rupees (wholesale) */
   amountLkr: number;
+  /** Amount charged to customer in LKR */
+  customerAmountLkr?: number;
   planName?: string;
-  profitMargin?: number;
   notes?: string;
   sendSms?: boolean;
 }

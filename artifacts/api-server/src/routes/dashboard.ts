@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { db, customersTable, rechargesTable } from "@workspace/db";
 import { requireAuth } from "../lib/adminAuth";
 import { GetDueAlertsQueryParams } from "@workspace/api-zod";
@@ -52,11 +51,6 @@ router.get("/dashboard/stats", requireAuth, async (_req, res): Promise<void> => 
   const customers = await db.select().from(customersTable);
   const recharges = await db.select().from(rechargesTable);
 
-  const rechargeMap = new Map<number, typeof rechargesTable.$inferSelect>();
-  for (const r of recharges) {
-    rechargeMap.set(r.customerId, r);
-  }
-
   let active = 0, expiringSoon = 0, expired = 0, pending = 0;
   const providerMap = new Map<string, { count: number; activeCount: number }>();
 
@@ -82,6 +76,9 @@ router.get("/dashboard/stats", requireAuth, async (_req, res): Promise<void> => 
   const totalRevenueInr = recharges.reduce((s, r) => s + parseFloat(r.amountInr), 0);
   const totalRevenueLkr = recharges.reduce((s, r) => s + parseFloat(r.amountLkr), 0);
 
+  const totalProfitLkr = recharges.reduce((s, r) => s + (r.profitMargin ? parseFloat(r.profitMargin) : 0), 0);
+  const monthlyProfitLkr = monthlyRecharges.reduce((s, r) => s + (r.profitMargin ? parseFloat(r.profitMargin) : 0), 0);
+
   const customersByProvider = Array.from(providerMap.entries()).map(([provider, v]) => ({
     provider,
     count: v.count,
@@ -98,6 +95,8 @@ router.get("/dashboard/stats", requireAuth, async (_req, res): Promise<void> => 
     monthlyRevenueLkr,
     totalRevenueInr,
     totalRevenueLkr,
+    totalProfitLkr,
+    monthlyProfitLkr,
     customersByProvider,
   });
 });
