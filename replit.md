@@ -1,6 +1,6 @@
-# [Project name]
+# DTH Customer Manager
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A full-stack web application for a Sri Lankan business managing Indian DTH (Direct-to-Home) TV subscriptions. Tracks customers, recharges, due dates, and revenue across all major Indian DTH providers.
 
 ## Run & Operate
 
@@ -18,19 +18,38 @@ _Replace the heading above with the project's name, and this line with one sente
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React 19 + Vite + Tailwind CSS + shadcn/ui + Recharts
+- Auth: express-session (username/password)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/db/src/schema/` — DB schema (customers, recharges tables)
+- `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contract)
+- `lib/api-client-react/src/generated/` — generated React Query hooks + Zod schemas
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/dth-manager/src/pages/` — React frontend pages
+- `artifacts/dth-manager/src/components/` — shared UI components
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first API: OpenAPI spec → Orval codegen → typed React Query hooks + Zod validators
+- Session-based auth: express-session with SESSION_SECRET env var; no JWT
+- Currency: all amounts stored in INR; LKR calculated at runtime using a configurable rate stored in localStorage (default: 3.6)
+- Status auto-calculation: `refreshAllStatuses` endpoint recomputes active/expiring_soon/expired based on `next_recharge_date`
+- SMS: stub endpoint logs in dev; requires `SMS_GATEWAY_URL` + `SMS_API_KEY` env vars to actually send
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Admin Login** — secure username/password login (default: admin / dth@admin2024)
+- **Dashboard** — stats (total, active, expiring, expired), monthly revenue, provider pie chart, urgent alerts preview
+- **Customers** — searchable/filterable table with status, days remaining, last recharge amount
+- **Customer Detail** — full recharge history + add new recharge form with SMS toggle
+- **Due Alerts** — tabbed view: overdue / today / 3 days / 7 days / 15 days
+- **Settings** — configure INR→LKR exchange rate, admin credential docs, SMS gateway docs
+
+## Providers supported
+
+Tata Play, Airtel Digital TV, Dish TV, Sun Direct, d2h, Zing Digital, DD Free Dish
 
 ## User preferences
 
@@ -38,7 +57,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run `pnpm run typecheck:libs` after any change to `lib/db` or `lib/api-spec` before running leaf package typechecks
+- After editing `openapi.yaml`, always run `pnpm --filter @workspace/api-spec run codegen` to regenerate hooks
+- `useGetDueAlerts` hook signature: `(params?, options?)` — pass `{ query: { queryKey: ... } }` as the **second** argument
+- `daysUntilExpiry` is typed `number | null | undefined` — use `!= null` (not `!== null`) for null checks
 
 ## Pointers
 

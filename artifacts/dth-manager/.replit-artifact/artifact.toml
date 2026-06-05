@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "DTH Customer Manager"
+version = "1.0.0"
+id = "artifacts/dth-manager"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24388
+
+[services.development]
+run = "pnpm --filter @workspace/dth-manager run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dth-manager", "run", "build" ]
+publicDir = "artifacts/dth-manager/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24388"
+BASE_PATH = "/"
