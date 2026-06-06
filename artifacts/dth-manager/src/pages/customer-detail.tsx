@@ -33,6 +33,7 @@ import { EditCustomerDialog } from "@/components/edit-customer-dialog";
 const rechargeSchema = z.object({
   rechargeDate: z.string().min(1, "Date is required"),
   validityDays: z.coerce.number().int().min(1, "Validity must be at least 1 day"),
+  customerAmountInr: z.coerce.number().optional(),
   amountInr: z.coerce.number().min(0, "Amount required"),
   customerAmountLkr: z.coerce.number().optional(),
   planName: z.string().optional(),
@@ -64,6 +65,7 @@ export default function CustomerDetail() {
     defaultValues: {
       rechargeDate: today,
       validityDays: 30,
+      customerAmountInr: undefined,
       amountInr: 0,
       customerAmountLkr: undefined,
       planName: "",
@@ -73,6 +75,7 @@ export default function CustomerDetail() {
   });
 
   const watchedAmountInr = form.watch("amountInr") || 0;
+  const watchedCustomerAmountInr = form.watch("customerAmountInr");
   const watchedCustomerAmountLkr = form.watch("customerAmountLkr");
   const watchedRechargeDate = form.watch("rechargeDate");
   const watchedValidityDays = form.watch("validityDays") || 30;
@@ -83,6 +86,14 @@ export default function CustomerDetail() {
     ? watchedCustomerAmountLkr - costLkr
     : null;
 
+  // When customer INR amount is entered, auto-fill LKR field
+  const handleCustomerInrChange = (inrVal: number | undefined) => {
+    form.setValue("customerAmountInr", inrVal);
+    if (inrVal != null && inrVal > 0) {
+      form.setValue("customerAmountLkr", parseFloat((inrVal * rate).toFixed(2)));
+    }
+  };
+
   // Calculate next recharge date for SMS preview
   const nextRechargeDatePreview = (() => {
     try {
@@ -92,7 +103,10 @@ export default function CustomerDetail() {
     } catch { return ""; }
   })();
 
-  const smsPreview = customer ? `Dear ${customer.name}, your ${customer.provider.replace(/_/g, " ")} DTH has been recharged for ${watchedValidityDays} days. Amount: Rs.${(watchedCustomerAmountLkr ?? costLkr).toFixed(0)} (INR ${watchedAmountInr}). Next due: ${nextRechargeDatePreview}. - DTH Manager` : "";
+  const smsCustomerAmount = watchedCustomerAmountLkr ?? null;
+  const smsPreview = customer
+    ? `Dear ${customer.name}, your account has been recharged for ${watchedValidityDays} days.${smsCustomerAmount != null ? ` Amount: Rs.${smsCustomerAmount.toFixed(0)}.` : ""} Next due: ${nextRechargeDatePreview}. - DTH Manager`
+    : "";
 
   const onSubmitRecharge = (data: RechargeForm) => {
     const amountLkr = data.amountInr * rate;
@@ -117,7 +131,7 @@ export default function CustomerDetail() {
           queryClient.invalidateQueries({ queryKey: getListCustomersQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDashboardStatsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetDueAlertsQueryKey() });
-          form.reset({ rechargeDate: today, validityDays: 30, amountInr: 0, customerAmountLkr: undefined, planName: "", sendSms: false });
+          form.reset({ rechargeDate: today, validityDays: 30, customerAmountInr: undefined, amountInr: 0, customerAmountLkr: undefined, planName: "", sendSms: false });
           toast({ title: "Recharge added successfully" });
 
           if (data.sendSms && customer) {
@@ -273,6 +287,31 @@ export default function CustomerDetail() {
                       <FormLabel>Validity (days)</FormLabel>
                       <FormControl><Input type="number" {...field} placeholder="30" data-testid="input-validity" /></FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {/* Customer Amount INR → auto-fills LKR */}
+                  <FormField control={form.control} name="customerAmountInr" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Amount (INR) <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Amount you charge customer in INR"
+                          value={field.value ?? ""}
+                          onChange={e => handleCustomerInrChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                          data-testid="input-customer-amount-inr"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      {watchedCustomerAmountInr != null && watchedCustomerAmountInr > 0 && (
+                        <div className="text-xs bg-muted/60 rounded px-2 py-1.5 mt-1">
+                          <span className="text-muted-foreground">= Rs. </span>
+                          <span className="font-semibold text-foreground">{(watchedCustomerAmountInr * rate).toFixed(2)}</span>
+                          <span className="text-muted-foreground ml-1">LKR (auto-filled below)</span>
+                        </div>
+                      )}
                     </FormItem>
                   )} />
 
