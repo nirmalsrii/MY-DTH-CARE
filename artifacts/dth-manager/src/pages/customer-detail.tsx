@@ -86,11 +86,17 @@ export default function CustomerDetail() {
     ? watchedCustomerAmountLkr - costLkr
     : null;
 
-  // When customer INR amount is entered, auto-fill LKR field
+  // When customer INR amount is entered:
+  // - cost INR = customerINR - 3.5% (what we pay to provider)
+  // - customer LKR = customerINR × rate
   const handleCustomerInrChange = (inrVal: number | undefined) => {
     form.setValue("customerAmountInr", inrVal);
     if (inrVal != null && inrVal > 0) {
+      const costInr = parseFloat((inrVal * (1 - 0.035)).toFixed(2));
+      form.setValue("amountInr", costInr);
       form.setValue("customerAmountLkr", parseFloat((inrVal * rate).toFixed(2)));
+    } else {
+      form.setValue("amountInr", 0);
     }
   };
 
@@ -105,7 +111,7 @@ export default function CustomerDetail() {
 
   const smsCustomerAmount = watchedCustomerAmountLkr ?? null;
   const smsPreview = customer
-    ? `Dear ${customer.name}, your account has been recharged for ${watchedValidityDays} days.${smsCustomerAmount != null ? ` Amount: Rs.${smsCustomerAmount.toFixed(0)}.` : ""} Next due: ${nextRechargeDatePreview}. - DTH Manager`
+    ? `Dear ${customer.name}, your account (${customer.customerId}) has been recharged successfully.${smsCustomerAmount != null ? ` Amount: Rs.${smsCustomerAmount.toFixed(0)}.` : ""} Next due: ${nextRechargeDatePreview}. - ASIAN DTH`
     : "";
 
   const onSubmitRecharge = (data: RechargeForm) => {
