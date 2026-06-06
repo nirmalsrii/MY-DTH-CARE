@@ -429,6 +429,145 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /settings:
+    get:
+      operationId: getAppSettings
+      tags: [settings]
+      summary: Get all app settings (sensitive values masked)
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: App settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  /settings/sms:
+    put:
+      operationId: updateSmsSettings
+      tags: [settings]
+      summary: Update SMS gateway settings
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SmsGatewayConfig"
+      responses:
+        "200":
+          description: Settings saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /settings/test-sms:
+    post:
+      operationId: testSmsGateway
+      tags: [settings]
+      summary: Send a test SMS via the configured gateway
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Test sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Gateway error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /settings/firebase-auth:
+    put:
+      operationId: updateFirebaseAuthSettings
+      tags: [settings]
+      summary: Update Firebase Authentication settings
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirebaseAuthConfig"
+      responses:
+        "200":
+          description: Settings saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /settings/firebase-public-config:
+    get:
+      operationId: getFirebasePublicConfig
+      tags: [settings]
+      summary: Get public Firebase config for frontend initialization
+      responses:
+        "200":
+          description: Firebase public config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirebasePublicConfig"
+
+  /settings/firebase-db:
+    put:
+      operationId: updateFirebaseDbSettings
+      tags: [settings]
+      summary: Update Firebase Database settings
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirebaseDbConfig"
+      responses:
+        "200":
+          description: Settings saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /settings/test-firebase-db:
+    post:
+      operationId: testFirebaseDb
+      tags: [settings]
+      summary: Test Firebase Database connection
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Connection OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Not configured or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -813,3 +952,87 @@ components:
         - customerId
         - message
         - mobile
+
+    SmsGatewayConfig:
+      type: object
+      properties:
+        gatewayUrl:
+          type: string
+        apiKey:
+          type: string
+        senderId:
+          type: string
+        enabled:
+          type: boolean
+      required:
+        - gatewayUrl
+        - apiKey
+        - senderId
+        - enabled
+
+    FirebaseAuthConfig:
+      type: object
+      properties:
+        apiKey:
+          type: string
+        authDomain:
+          type: string
+        projectId:
+          type: string
+        appId:
+          type: string
+        enabled:
+          type: boolean
+      required:
+        - apiKey
+        - authDomain
+        - projectId
+        - appId
+        - enabled
+
+    FirebaseDbConfig:
+      type: object
+      properties:
+        projectId:
+          type: string
+        databaseUrl:
+          type: string
+        serviceAccountJson:
+          type: string
+        enabled:
+          type: boolean
+      required:
+        - projectId
+        - databaseUrl
+        - serviceAccountJson
+        - enabled
+
+    FirebasePublicConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        apiKey:
+          type: string
+        authDomain:
+          type: string
+        projectId:
+          type: string
+        appId:
+          type: string
+      required:
+        - enabled
+
+    AppSettings:
+      type: object
+      properties:
+        sms:
+          $ref: "#/components/schemas/SmsGatewayConfig"
+        firebaseAuth:
+          $ref: "#/components/schemas/FirebaseAuthConfig"
+        firebaseDb:
+          $ref: "#/components/schemas/FirebaseDbConfig"
+      required:
+        - sms
+        - firebaseAuth
+        - firebaseDb

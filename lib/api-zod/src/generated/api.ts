@@ -406,3 +406,103 @@ export const SendSmsResponse = zod.object({
 })
 
 
+/**
+ * @summary Get all app settings (sensitive values masked)
+ */
+export const GetAppSettingsResponse = zod.object({
+  "sms": zod.object({
+  "gatewayUrl": zod.string(),
+  "apiKey": zod.string(),
+  "senderId": zod.string(),
+  "enabled": zod.boolean()
+}),
+  "firebaseAuth": zod.object({
+  "apiKey": zod.string(),
+  "authDomain": zod.string(),
+  "projectId": zod.string(),
+  "appId": zod.string(),
+  "enabled": zod.boolean()
+}),
+  "firebaseDb": zod.object({
+  "projectId": zod.string(),
+  "databaseUrl": zod.string(),
+  "serviceAccountJson": zod.string(),
+  "enabled": zod.boolean()
+})
+})
+
+
+/**
+ * @summary Update SMS gateway settings
+ */
+export const UpdateSmsSettingsBody = zod.object({
+  "gatewayUrl": zod.string(),
+  "apiKey": zod.string(),
+  "senderId": zod.string(),
+  "enabled": zod.boolean()
+})
+
+export const UpdateSmsSettingsResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Send a test SMS via the configured gateway
+ */
+export const TestSmsGatewayResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Update Firebase Authentication settings
+ */
+export const UpdateFirebaseAuthSettingsBody = zod.object({
+  "apiKey": zod.string(),
+  "authDomain": zod.string(),
+  "projectId": zod.string(),
+  "appId": zod.string(),
+  "enabled": zod.boolean()
+})
+
+export const UpdateFirebaseAuthSettingsResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Get public Firebase config for frontend initialization
+ */
+export const GetFirebasePublicConfigResponse = zod.object({
+  "enabled": zod.boolean(),
+  "apiKey": zod.string().optional(),
+  "authDomain": zod.string().optional(),
+  "projectId": zod.string().optional(),
+  "appId": zod.string().optional()
+})
+
+
+/**
+ * @summary Update Firebase Database settings
+ */
+export const UpdateFirebaseDbSettingsBody = zod.object({
+  "projectId": zod.string(),
+  "databaseUrl": zod.string(),
+  "serviceAccountJson": zod.string(),
+  "enabled": zod.boolean()
+})
+
+export const UpdateFirebaseDbSettingsResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Test Firebase Database connection
+ */
+export const TestFirebaseDbResponse = zod.object({
+  "message": zod.string()
+})
+
+

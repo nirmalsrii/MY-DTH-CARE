@@ -6,6 +6,7 @@ import customersRouter from "./customers";
 import rechargesRouter from "./recharges";
 import dashboardRouter from "./dashboard";
 import smsRouter from "./sms";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(customersRouter);
 router.use(rechargesRouter);
 router.use(dashboardRouter);
 router.use(smsRouter);
+router.use(settingsRouter);
 
 export default router;

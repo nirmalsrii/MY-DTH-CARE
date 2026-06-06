@@ -203,6 +203,42 @@ export interface SmsInput {
   mobile: string;
 }
 
+export interface SmsGatewayConfig {
+  gatewayUrl: string;
+  apiKey: string;
+  senderId: string;
+  enabled: boolean;
+}
+
+export interface FirebaseAuthConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  appId: string;
+  enabled: boolean;
+}
+
+export interface FirebaseDbConfig {
+  projectId: string;
+  databaseUrl: string;
+  serviceAccountJson: string;
+  enabled: boolean;
+}
+
+export interface FirebasePublicConfig {
+  enabled: boolean;
+  apiKey?: string;
+  authDomain?: string;
+  projectId?: string;
+  appId?: string;
+}
+
+export interface AppSettings {
+  sms: SmsGatewayConfig;
+  firebaseAuth: FirebaseAuthConfig;
+  firebaseDb: FirebaseDbConfig;
+}
+
 export type ListCustomersParams = {
 provider?: string;
 status?: ListCustomersStatus;

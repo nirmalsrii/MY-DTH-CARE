@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AppSettings,
   AuthStatus,
   ChangePasswordInput,
   Customer,
@@ -29,6 +30,9 @@ import type {
   DashboardStats,
   DueAlerts,
   ErrorResponse,
+  FirebaseAuthConfig,
+  FirebaseDbConfig,
+  FirebasePublicConfig,
   GetDueAlertsParams,
   HealthStatus,
   ListCustomersParams,
@@ -38,6 +42,7 @@ import type {
   RechargeInput,
   SetupInput,
   SetupStatus,
+  SmsGatewayConfig,
   SmsInput,
   SuccessResponse
 } from './api.schemas';
@@ -1538,5 +1543,512 @@ export const useSendSms = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSendSmsMutationOptions(options));
+    }
+
+export const getGetAppSettingsUrl = () => {
+
+
+
+
+  return `/api/settings`
+}
+
+/**
+ * @summary Get all app settings (sensitive values masked)
+ */
+export const getAppSettings = async ( options?: RequestInit): Promise<AppSettings> => {
+
+  return customFetch<AppSettings>(getGetAppSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAppSettingsQueryKey = () => {
+    return [
+    `/api/settings`
+    ] as const;
+    }
+
+
+export const getGetAppSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getAppSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAppSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAppSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAppSettings>>> = ({ signal }) => getAppSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAppSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAppSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAppSettings>>>
+export type GetAppSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all app settings (sensitive values masked)
+ */
+
+export function useGetAppSettings<TData = Awaited<ReturnType<typeof getAppSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAppSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAppSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateSmsSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/sms`
+}
+
+/**
+ * @summary Update SMS gateway settings
+ */
+export const updateSmsSettings = async (smsGatewayConfig: SmsGatewayConfig, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getUpdateSmsSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      smsGatewayConfig,)
+  }
+);}
+
+
+
+
+export const getUpdateSmsSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSmsSettings>>, TError,{data: BodyType<SmsGatewayConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSmsSettings>>, TError,{data: BodyType<SmsGatewayConfig>}, TContext> => {
+
+const mutationKey = ['updateSmsSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSmsSettings>>, {data: BodyType<SmsGatewayConfig>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateSmsSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSmsSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateSmsSettings>>>
+    export type UpdateSmsSettingsMutationBody = BodyType<SmsGatewayConfig>
+    export type UpdateSmsSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update SMS gateway settings
+ */
+export const useUpdateSmsSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSmsSettings>>, TError,{data: BodyType<SmsGatewayConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSmsSettings>>,
+        TError,
+        {data: BodyType<SmsGatewayConfig>},
+        TContext
+      > => {
+      return useMutation(getUpdateSmsSettingsMutationOptions(options));
+    }
+
+export const getTestSmsGatewayUrl = () => {
+
+
+
+
+  return `/api/settings/test-sms`
+}
+
+/**
+ * @summary Send a test SMS via the configured gateway
+ */
+export const testSmsGateway = async ( options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getTestSmsGatewayUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getTestSmsGatewayMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,void, TContext> => {
+
+const mutationKey = ['testSmsGateway'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testSmsGateway>>, void> = () => {
+
+
+          return  testSmsGateway(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestSmsGatewayMutationResult = NonNullable<Awaited<ReturnType<typeof testSmsGateway>>>
+
+    export type TestSmsGatewayMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Send a test SMS via the configured gateway
+ */
+export const useTestSmsGateway = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSmsGateway>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testSmsGateway>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getTestSmsGatewayMutationOptions(options));
+    }
+
+export const getUpdateFirebaseAuthSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/firebase-auth`
+}
+
+/**
+ * @summary Update Firebase Authentication settings
+ */
+export const updateFirebaseAuthSettings = async (firebaseAuthConfig: FirebaseAuthConfig, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getUpdateFirebaseAuthSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      firebaseAuthConfig,)
+  }
+);}
+
+
+
+
+export const getUpdateFirebaseAuthSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseAuthSettings>>, TError,{data: BodyType<FirebaseAuthConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseAuthSettings>>, TError,{data: BodyType<FirebaseAuthConfig>}, TContext> => {
+
+const mutationKey = ['updateFirebaseAuthSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFirebaseAuthSettings>>, {data: BodyType<FirebaseAuthConfig>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateFirebaseAuthSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFirebaseAuthSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateFirebaseAuthSettings>>>
+    export type UpdateFirebaseAuthSettingsMutationBody = BodyType<FirebaseAuthConfig>
+    export type UpdateFirebaseAuthSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update Firebase Authentication settings
+ */
+export const useUpdateFirebaseAuthSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseAuthSettings>>, TError,{data: BodyType<FirebaseAuthConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFirebaseAuthSettings>>,
+        TError,
+        {data: BodyType<FirebaseAuthConfig>},
+        TContext
+      > => {
+      return useMutation(getUpdateFirebaseAuthSettingsMutationOptions(options));
+    }
+
+export const getGetFirebasePublicConfigUrl = () => {
+
+
+
+
+  return `/api/settings/firebase-public-config`
+}
+
+/**
+ * @summary Get public Firebase config for frontend initialization
+ */
+export const getFirebasePublicConfig = async ( options?: RequestInit): Promise<FirebasePublicConfig> => {
+
+  return customFetch<FirebasePublicConfig>(getGetFirebasePublicConfigUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFirebasePublicConfigQueryKey = () => {
+    return [
+    `/api/settings/firebase-public-config`
+    ] as const;
+    }
+
+
+export const getGetFirebasePublicConfigQueryOptions = <TData = Awaited<ReturnType<typeof getFirebasePublicConfig>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFirebasePublicConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFirebasePublicConfigQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFirebasePublicConfig>>> = ({ signal }) => getFirebasePublicConfig({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFirebasePublicConfig>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFirebasePublicConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getFirebasePublicConfig>>>
+export type GetFirebasePublicConfigQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get public Firebase config for frontend initialization
+ */
+
+export function useGetFirebasePublicConfig<TData = Awaited<ReturnType<typeof getFirebasePublicConfig>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFirebasePublicConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFirebasePublicConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateFirebaseDbSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/firebase-db`
+}
+
+/**
+ * @summary Update Firebase Database settings
+ */
+export const updateFirebaseDbSettings = async (firebaseDbConfig: FirebaseDbConfig, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getUpdateFirebaseDbSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      firebaseDbConfig,)
+  }
+);}
+
+
+
+
+export const getUpdateFirebaseDbSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseDbSettings>>, TError,{data: BodyType<FirebaseDbConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseDbSettings>>, TError,{data: BodyType<FirebaseDbConfig>}, TContext> => {
+
+const mutationKey = ['updateFirebaseDbSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFirebaseDbSettings>>, {data: BodyType<FirebaseDbConfig>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateFirebaseDbSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFirebaseDbSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateFirebaseDbSettings>>>
+    export type UpdateFirebaseDbSettingsMutationBody = BodyType<FirebaseDbConfig>
+    export type UpdateFirebaseDbSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update Firebase Database settings
+ */
+export const useUpdateFirebaseDbSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFirebaseDbSettings>>, TError,{data: BodyType<FirebaseDbConfig>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFirebaseDbSettings>>,
+        TError,
+        {data: BodyType<FirebaseDbConfig>},
+        TContext
+      > => {
+      return useMutation(getUpdateFirebaseDbSettingsMutationOptions(options));
+    }
+
+export const getTestFirebaseDbUrl = () => {
+
+
+
+
+  return `/api/settings/test-firebase-db`
+}
+
+/**
+ * @summary Test Firebase Database connection
+ */
+export const testFirebaseDb = async ( options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getTestFirebaseDbUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getTestFirebaseDbMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testFirebaseDb>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testFirebaseDb>>, TError,void, TContext> => {
+
+const mutationKey = ['testFirebaseDb'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testFirebaseDb>>, void> = () => {
+
+
+          return  testFirebaseDb(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestFirebaseDbMutationResult = NonNullable<Awaited<ReturnType<typeof testFirebaseDb>>>
+
+    export type TestFirebaseDbMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Test Firebase Database connection
+ */
+export const useTestFirebaseDb = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testFirebaseDb>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testFirebaseDb>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getTestFirebaseDbMutationOptions(options));
     }
 

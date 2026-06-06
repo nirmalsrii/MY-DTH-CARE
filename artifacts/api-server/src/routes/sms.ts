@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { requireAuth } from "../lib/adminAuth";
 import { SendSmsBody } from "@workspace/api-zod";
 import { logger } from "../lib/logger";
+import { getSmsConfig } from "../lib/settingsService";
 
 const router: IRouter = Router();
 
@@ -14,10 +15,10 @@ router.post("/sms/send", requireAuth, async (req, res): Promise<void> => {
 
   const { customerId, message, mobile } = parsed.data;
 
-  // SMS gateway integration point
-  // To enable real SMS: set SMS_GATEWAY_URL, SMS_API_KEY, SMS_SENDER_ID env vars
-  const gatewayUrl = process.env.SMS_GATEWAY_URL;
-  const apiKey = process.env.SMS_API_KEY;
+  const cfg = await getSmsConfig();
+  const gatewayUrl = cfg.gatewayUrl || process.env.SMS_GATEWAY_URL;
+  const apiKey = cfg.apiKey || process.env.SMS_API_KEY;
+  const senderId = cfg.senderId || process.env.SMS_SENDER_ID || "ASIANDTH";
 
   if (gatewayUrl && apiKey) {
     try {
@@ -27,11 +28,7 @@ router.post("/sms/send", requireAuth, async (req, res): Promise<void> => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          to: mobile,
-          message,
-          sender: process.env.SMS_SENDER_ID ?? "DTHSVC",
-        }),
+        body: JSON.stringify({ to: mobile, message, sender: senderId }),
       });
 
       if (!response.ok) {
@@ -47,7 +44,6 @@ router.post("/sms/send", requireAuth, async (req, res): Promise<void> => {
       return;
     }
   } else {
-    // Log SMS in development when no gateway configured
     logger.info({ customerId, mobile, message }, "SMS (simulated - no gateway configured)");
   }
 
