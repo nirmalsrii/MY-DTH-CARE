@@ -65,8 +65,8 @@ export default function Login() {
           <div className="w-16 h-16 rounded-2xl bg-sidebar-primary flex items-center justify-center mb-4 shadow-xl">
             <Satellite className="w-8 h-8 text-sidebar-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-sidebar-foreground">DTH Manager</h1>
-          <p className="text-sm text-sidebar-foreground/50 mt-1">Sri Lanka Operations Portal</p>
+          <h1 className="text-2xl font-bold text-sidebar-foreground">ASIAN DTH</h1>
+          <p className="text-sm mt-1" style={{ color: "hsl(0,85%,65%)" }}>Sri Lanka Operations Portal</p>
         </div>
 
         {/* Card */}

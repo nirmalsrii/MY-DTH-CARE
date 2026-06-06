@@ -8,7 +8,7 @@ import {
   Settings,
   LogOut,
   Satellite,
-  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -43,37 +43,57 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <aside className="w-60 flex-shrink-0 bg-sidebar text-sidebar-foreground flex flex-col shadow-lg">
+      <aside
+        className="w-64 flex-shrink-0 flex flex-col shadow-2xl"
+        style={{
+          background: "linear-gradient(180deg, hsl(0,0%,9%) 0%, hsl(0,0%,7%) 100%)",
+          borderRight: "1px solid hsl(0,0%,14%)",
+        }}
+      >
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <Satellite className="w-4.5 h-4.5 text-sidebar-primary-foreground" />
+        <div className="px-5 pt-6 pb-5" style={{ borderBottom: "1px solid hsl(0,0%,15%)" }}>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, hsl(0,85%,55%) 0%, hsl(0,78%,42%) 100%)" }}
+            >
+              <Satellite className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm text-sidebar-foreground leading-tight">DTH Manager</p>
-              <p className="text-xs text-sidebar-foreground/50">Sri Lanka Operations</p>
+              <p className="font-bold text-sm text-white leading-tight tracking-wide">ASIAN DTH</p>
+              <p className="text-xs font-medium" style={{ color: "hsl(0,85%,65%)" }}>Sri Lanka Operations</p>
             </div>
           </div>
         </div>
 
+        {/* Nav section label */}
+        <div className="px-5 pt-5 pb-1">
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "hsl(0,0%,38%)" }}>
+            Main Menu
+          </p>
+        </div>
+
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <nav className="flex-1 px-3 py-2 space-y-0.5">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive = href === "/" ? location === "/" : location.startsWith(href);
             return (
               <Link key={href} href={href}>
                 <a
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                     isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      ? "text-white shadow-md"
+                      : "hover:bg-white/5"
                   )}
+                  style={isActive ? {
+                    background: "linear-gradient(90deg, hsl(0,80%,48%) 0%, hsl(0,75%,42%) 100%)",
+                    boxShadow: "0 2px 12px rgba(220,38,38,0.35)",
+                  } : { color: "hsl(0,0%,65%)" }}
                   data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {label}
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{label}</span>
                   {label === "Due Alerts" && (
                     <span className="ml-auto w-2 h-2 rounded-full bg-red-400 animate-pulse" />
                   )}
@@ -83,32 +103,56 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-3 py-4 border-t border-sidebar-border space-y-2">
-          <div className="px-3 py-2">
-            <p className="text-xs text-sidebar-foreground/40 uppercase tracking-wide font-medium">Signed in as</p>
-            <p className="text-sm text-sidebar-foreground/80 font-medium truncate">
-              {auth?.username ?? "Admin"}
-            </p>
+        {/* Stats strip */}
+        <div className="mx-3 mb-3 rounded-xl p-3" style={{ background: "hsl(0,0%,13%)", border: "1px solid hsl(0,0%,18%)" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="w-3.5 h-3.5" style={{ color: "hsl(0,85%,58%)" }} />
+            <p className="text-xs font-semibold" style={{ color: "hsl(0,0%,60%)" }}>ASIAN DTH</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            onClick={handleLogout}
-            disabled={logout.isPending}
-            data-testid="button-logout"
-          >
-            <LogOut className="w-4 h-4" />
-            {logout.isPending ? "Signing out..." : "Sign out"}
-          </Button>
+          <p className="text-xs" style={{ color: "hsl(0,0%,40%)" }}>DTH Subscription Manager</p>
+        </div>
+
+        {/* Footer */}
+        <div className="px-3 pb-4" style={{ borderTop: "1px solid hsl(0,0%,14%)", paddingTop: "12px" }}>
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg mb-1" style={{ background: "hsl(0,0%,13%)" }}>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(0,0%,38%)" }}>Admin</p>
+              <p className="text-sm font-medium text-white truncate">{auth?.username ?? "Admin"}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 flex-shrink-0 rounded-md hover:bg-red-500/20"
+              style={{ color: "hsl(0,0%,50%)" }}
+              onClick={handleLogout}
+              disabled={logout.isPending}
+              data-testid="button-logout"
+              title="Sign out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      {/* Main area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="flex-shrink-0 h-12 flex items-center px-6 gap-3 border-b border-border bg-card">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ background: "hsl(0,80%,50%)", boxShadow: "0 0 6px hsl(0,80%,50%)" }}
+          />
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            {NAV_ITEMS.find(n => n.href === "/" ? location === "/" : location.startsWith(n.href))?.label ?? "DTH Manager"}
+          </p>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
